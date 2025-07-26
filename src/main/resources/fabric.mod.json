@@ -9,8 +9,8 @@
 		"R4mBLe_"
 	],
 	"contact": {
-		"homepage": "https://fabricmc.net/",
-		"sources": "https://github.com/FabricMC/fabric-example-mod"
+		"homepage": "https://github.com/Zadudoder/QR-Scanner",
+		"sources": "https://github.com/Zadudoder/QR-Scanner"
 	},
 	"license": "MIT License",
 	"icon": "assets/qrscanner/qrscannerlogo.png",
