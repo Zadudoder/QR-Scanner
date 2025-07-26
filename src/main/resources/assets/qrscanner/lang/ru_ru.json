@@ -1,0 +1,16 @@
+{
+  "key.qrscanner.scan": "Сканировать QR-код",
+  "category.qrscanner.main": "QR Сканер",
+
+  "text.followTheLink": "§aПерейти",
+  "text.cancel": "§cОтменить",
+  "text.AcceptLinkClick": "Вы хотите перейти по ссылке:",
+
+  "text.FailedOpenLink": "[QR Scanner]: §cНе удалось открыть ссылку",
+  "text.FailedTakeScreenshot": "[QR Scanner]: §cНе удалось сделать скриншот",
+  "text.foundLink": "[QR Scanner]: §aНайдена ссылка: §e %s",
+  "text.QRCodeNotFound": "[QR Scanner]: §cQR-код не найден",
+  "text.error": "[QR Scanner]: §cОшибка: %s",
+  "text.qrscanner.hover_tip": "§eНажмите, чтобы открыть ссылку"
+
+}

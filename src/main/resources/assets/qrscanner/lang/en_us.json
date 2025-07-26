@@ -1,0 +1,15 @@
+{
+  "key.qrscanner.scan": "Scan QR Code",
+  "category.qrscanner.main": "QR Scanner",
+
+  "text.followTheLink": "§aProceed",
+  "text.cancel": "§cCancel",
+  "text.AcceptLinkClick": "Do you want to visit this link:",
+
+  "text.FailedOpenLink": "[QR Scanner]: §cFailed to open link",
+  "text.FailedTakeScreenshot": "[QR Scanner]: §cFailed to capture screenshot",
+  "text.foundLink": "[QR Scanner]: §aLink found: §e%s",
+  "text.QRCodeNotFound": "[QR Scanner]: §cQR code not found",
+  "text.error": "[QR Scanner]: §cError: %s",
+  "text.qrscanner.hover_tip": "§eClick to open link"
+}

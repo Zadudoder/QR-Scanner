@@ -1,0 +1,41 @@
+{
+	"schemaVersion": 1,
+	"id": "qrscanner",
+	"version": "${version}",
+	"name": "QRScanner",
+	"description": "Simple mod for scanning QR codes",
+	"authors": [
+		"Zadudoder",
+		"R4mBLe_"
+	],
+	"contact": {
+		"homepage": "https://fabricmc.net/",
+		"sources": "https://github.com/FabricMC/fabric-example-mod"
+	},
+	"license": "MIT License",
+	"icon": "assets/qrscanner/qrscannerlogo.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"zadudoder.qrscanner.QRScanner"
+		],
+		"fabric-datagen": [
+			"zadudoder.qrscanner.QRScannerDataGenerator"
+		],
+		"client": [
+			"zadudoder.qrscanner.QRScannerClient"
+		]
+	},
+	"mixins": [
+
+	],
+	"depends": {
+		"fabricloader": ">=0.16.14",
+		"minecraft": ">=1.21",
+		"java": ">=21",
+		"fabric-api": "*"
+	},
+	"suggests": {
+		"another-mod": "*"
+	}
+}
