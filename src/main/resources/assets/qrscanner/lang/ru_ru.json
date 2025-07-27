@@ -8,7 +8,7 @@
 
   "text.FailedOpenLink": "[QR Scanner]: §cНе удалось открыть ссылку",
   "text.FailedTakeScreenshot": "[QR Scanner]: §cНе удалось сделать скриншот",
-  "text.foundLink": "[QR Scanner]: §aНайдена ссылка: %s",
+  "text.foundLink": "[QR Scanner]: §aНайдена ссылка: §a%s",
   "text.QRCodeNotFound": "[QR Scanner]: §cQR-код не найден",
   "text.error": "[QR Scanner]: §cОшибка: %s",
   "text.qrscanner.hover_tip": "§eНажмите, чтобы открыть ссылку"

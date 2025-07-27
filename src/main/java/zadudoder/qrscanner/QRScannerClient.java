@@ -1,11 +1,18 @@
 package zadudoder.qrscanner;
 
+import com.google.zxing.*;
+import com.google.zxing.client.j2se.BufferedImageLuminanceSource;
+import com.google.zxing.common.GlobalHistogramBinarizer;
+import com.google.zxing.common.HybridBinarizer;
+import com.google.zxing.multi.GenericMultipleBarcodeReader;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.KeyBinding;
+import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.util.InputUtil;
+import net.minecraft.client.util.ScreenshotRecorder;
 import net.minecraft.text.ClickEvent;
 import net.minecraft.text.HoverEvent;
 import net.minecraft.text.Text;
@@ -17,6 +24,9 @@ import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
 import java.net.URI;
 import java.nio.ByteBuffer;
+import java.util.Collections;
+import java.util.EnumMap;
+import java.util.Map;
 
 public class QRScannerClient implements ClientModInitializer {
     private static KeyBinding scanKey;
@@ -32,84 +42,97 @@ public class QRScannerClient implements ClientModInitializer {
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             if (scanKey.wasPressed()) {
-                scanForQRCode(client);
+                ScanQrCode(client);
             }
         });
     }
 
-    public void scanForQRCode(MinecraftClient client) {
-        if (client.player == null) return;
-
+    public static void ScanQrCode(MinecraftClient client) {
+        if (client.player == null) {
+            return;
+        }
+        NativeImage screenshot;
         try {
-            BufferedImage screenshot = captureScreen();
+            screenshot = ScreenshotRecorder.takeScreenshot(client.getFramebuffer());
             if (screenshot == null) {
                 client.player.sendMessage(Text.translatable("text.FailedTakeScreenshot"), false);
                 return;
             }
-            String result = decodeQRCode(screenshot);
+        } catch (Exception ex) {
+            return;
+        }
+        BufferedImage bufferedImage = new BufferedImage(
+                screenshot.getWidth(),
+                screenshot.getHeight(),
+                BufferedImage.TYPE_INT_RGB
+        );
 
-            if (result != null) {
-                Text clickableLink = Text.literal(result)
-                        .styled(style -> style
-                                .withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, result))
-                                .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
-                                        Text.translatable("text.qrscanner.hover_tip")))
-                        );
-
-                client.player.sendMessage(
-                        Text.translatable("text.foundLink", clickableLink),
-                        false
-                );
-                client.setScreen(new AcceptScreen(result, client.currentScreen));
-            } else {
-                client.player.sendMessage(Text.translatable("text.QRCodeNotFound"), false);
+        for (int y = 0; y < screenshot.getHeight(); y++) {
+            for (int x = 0; x < screenshot.getWidth(); x++) {
+                int color = screenshot.getColor(x, y);
+                bufferedImage.setRGB(x, y, color);
             }
-        } catch (Exception e) {
-            client.player.sendMessage(Text.translatable("text.error", e.getClass().getSimpleName()), false);
-            e.printStackTrace();
         }
+        String result = decodeQRCode(bufferedImage);
+        if (result == null) {
+            client.player.sendMessage(Text.translatable("text.QRCodeNotFound"), false);
+            return;
+        }
+
+        Text clickableLink = Text.literal(result)
+                .styled(style -> style
+                        .withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, result))
+                        .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
+                                Text.translatable("text.qrscanner.hover_tip")))
+                );
+
+        client.player.sendMessage(
+                Text.translatable("text.foundLink", clickableLink),
+                false
+        );
+        client.setScreen(new AcceptScreen(result, client.currentScreen));
     }
 
-    public BufferedImage captureScreen() {
-        try {
-            GLFW.glfwPollEvents();
-            int width = MinecraftClient.getInstance().getWindow().getWidth();
-            int height = MinecraftClient.getInstance().getWindow().getHeight();
+    private static String decodeQRCode(BufferedImage image) {
+        Map<DecodeHintType, Object> hints = new EnumMap<>(DecodeHintType.class);
+        hints.put(DecodeHintType.TRY_HARDER, Boolean.TRUE);
+        hints.put(DecodeHintType.POSSIBLE_FORMATS, Collections.singletonList(BarcodeFormat.QR_CODE));
+        hints.put(DecodeHintType.CHARACTER_SET, "UTF-8");
+        hints.put(DecodeHintType.ALSO_INVERTED, Boolean.TRUE);
 
-            BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-            int[] pixels = ((DataBufferInt) image.getRaster().getDataBuffer()).getData();
+        LuminanceSource source = new BufferedImageLuminanceSource(image);
 
-            ByteBuffer buffer = ByteBuffer.allocateDirect(width * height * 4);
-            GLFW.glfwGetFramebufferSize(MinecraftClient.getInstance().getWindow().getHandle(),
-                    new int[1], new int[1]);
-            GL11.glReadPixels(0, 0, width, height, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, buffer);
+        String result = tryDecodeWithStrategies(source, hints);
 
-            buffer.asIntBuffer().get(pixels);
-            return image;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
+        if (result == null) {
+            hints.put(DecodeHintType.PURE_BARCODE, Boolean.TRUE);
+            result = tryDecodeWithStrategies(source, hints);
         }
+
+        return result;
     }
 
-    public String decodeQRCode(BufferedImage image) {
+    private static String tryDecodeWithStrategies(LuminanceSource source, Map<DecodeHintType, Object> hints) {
         try {
-            int[] pixels = image.getRGB(0, 0, image.getWidth(), image.getHeight(), null, 0, image.getWidth());
-
-            com.google.zxing.LuminanceSource source = new com.google.zxing.RGBLuminanceSource(
-                    image.getWidth(),
-                    image.getHeight(),
-                    pixels
-            );
-
-            com.google.zxing.BinaryBitmap bitmap = new com.google.zxing.BinaryBitmap(
-                    new com.google.zxing.common.HybridBinarizer(source)
-            );
-
-            com.google.zxing.Result result = new com.google.zxing.qrcode.QRCodeReader().decode(bitmap);
-            return result.getText();
-        } catch (Exception e) {
-            return null;
+            BinaryBitmap bitmap = new BinaryBitmap(new HybridBinarizer(source));
+            return new MultiFormatReader().decode(bitmap, hints).getText();
+        } catch (NotFoundException e) {
         }
+
+        try {
+            BinaryBitmap bitmap = new BinaryBitmap(new GlobalHistogramBinarizer(source));
+            return new MultiFormatReader().decode(bitmap, hints).getText();
+        } catch (NotFoundException e) {
+        }
+        try {
+            GenericMultipleBarcodeReader reader = new GenericMultipleBarcodeReader(new MultiFormatReader());
+            Result[] results = reader.decodeMultiple(new BinaryBitmap(new HybridBinarizer(source)), hints);
+            if (results.length > 0) {
+                return results[0].getText();
+            }
+        } catch (NotFoundException e) {
+        }
+
+        return null;
     }
 }
