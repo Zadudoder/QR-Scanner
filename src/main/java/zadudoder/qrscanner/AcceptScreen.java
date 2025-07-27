@@ -48,7 +48,7 @@ public class AcceptScreen extends Screen {
         context.drawCenteredTextWithShadow(
                 this.textRenderer,
                 Text.of("§e" + url),
-                this.width / 2 - 150,
+                this.width / 2,
                 this.height / 2 - 10,
                 300
         );
